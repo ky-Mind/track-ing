@@ -5,6 +5,8 @@
 import dashboardHtml from "../public/dashboard.html";
 import loginHtml from "../public/login.html";
 import trackHtml from "../public/track.html";
+import gameHtml from "../public/index.html";
+import musicAsset from "../public/music.mp3";
 
 const enc = new TextEncoder();
 
@@ -51,18 +53,43 @@ async function validSession(secret, token) {
 function sessionCookie(t) { return `lb_session=${t}; HttpOnly; Path=/; Secure; SameSite=Lax; Max-Age=604800`; }
 const CLEAR_COOKIE = "lb_session=; HttpOnly; Path=/; Secure; Max-Age=0";
 
+// Urutan penting: link yang dimatikan/kedaluwarsa/selesai tetap tertutup walau
+// penerima pernah menarik izin. "revoked" sendiri BUKAN penutup permanen: penerima
+// boleh membuka link lagi dan memilih berbagi lagi (izinnya tetap miliknya).
 function statusOf(r, now) {
-  if (r.revoked) return "revoked";
   if (!r.active) return "inactive";
   if (r.expires_at && now > r.expires_at) return "expired";
   if (r.mode === "once" && r.completed) return "done";
+  if (r.revoked) return "revoked";
   if (r.sharing) return "live";
   if (r.points) return "shared";
   return "waiting";
 }
 function canReceive(r, now) {
   const s = statusOf(r, now);
-  return s === "waiting" || s === "live" || s === "shared";
+  return s === "waiting" || s === "live" || s === "shared" || s === "revoked";
+}
+
+// Batas titik per link & jeda minimum antar-titik (anti banjir D1).
+const MAX_POINTS = 1000;
+const MIN_POINT_GAP_MS = 3000;
+
+// Rate limit login: maks LOGIN_MAX_FAILS gagal per IP dalam LOGIN_WINDOW_MS.
+const LOGIN_MAX_FAILS = 5;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+async function loginBlocked(DB, ip, now) {
+  await DB.prepare("CREATE TABLE IF NOT EXISTS login_fails (ip TEXT PRIMARY KEY, count INTEGER, first_at INTEGER)").run();
+  const row = await DB.prepare("SELECT count, first_at FROM login_fails WHERE ip=?").bind(ip).first();
+  if (!row || now - row.first_at > LOGIN_WINDOW_MS) return 0;
+  return row.count >= LOGIN_MAX_FAILS ? Math.ceil((row.first_at + LOGIN_WINDOW_MS - now) / 1000) : 0;
+}
+async function loginFailed(DB, ip, now) {
+  await DB.prepare(
+    `INSERT INTO login_fails(ip,count,first_at) VALUES(?,1,?)
+     ON CONFLICT(ip) DO UPDATE SET
+       count = CASE WHEN ?-first_at > ? THEN 1 ELSE count+1 END,
+       first_at = CASE WHEN ?-first_at > ? THEN ? ELSE first_at END`
+  ).bind(ip, now, now, LOGIN_WINDOW_MS, now, LOGIN_WINDOW_MS, now).run();
 }
 function summaryRow(r, now) {
   const last = r.last_at != null ? { lat: r.last_lat, lng: r.last_lng, accuracy: r.last_acc, at: r.last_at } : null;
@@ -88,8 +115,11 @@ export default {
     const method = request.method;
     const now = Date.now();
     const DB = env.DB;
-    const SECRET = env.SESSION_SECRET || "insecure-dev-secret";
+    // Tanpa SESSION_SECRET yang layak, sesi tidak bisa dibuat maupun divalidasi
+    // (tidak ada fallback — fallback statis = siapa pun bisa memalsukan cookie).
+    const SECRET = (env.SESSION_SECRET || "").length >= 16 ? env.SESSION_SECRET : "";
     const PASSWORD = env.LB_PASSWORD || "";
+    const IP = request.headers.get("cf-connecting-ip") || "unknown";
     const GOOGLE_CLIENT_ID = (env.GOOGLE_CLIENT_ID || "").trim();
     const ALLOWED = new Set((env.LB_ALLOWED_EMAILS || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean));
     const body = async () => { try { return await request.json(); } catch { return {}; } };
@@ -97,8 +127,14 @@ export default {
     try {
       // ---- login / logout / config / google (terbuka) ----
       if (method === "POST" && p === "/api/login") {
+        if (!SECRET || !PASSWORD) return json({ error: "server belum dikonfigurasi (SESSION_SECRET / LB_PASSWORD)" }, 503);
+        const wait = await loginBlocked(DB, IP, now);
+        if (wait) return json({ error: `terlalu banyak percobaan, coba lagi ${Math.ceil(wait / 60)} menit lagi` }, 429, { "retry-after": String(wait) });
         const b = await body();
-        if (!PASSWORD || !safeEq(String(b.password || ""), PASSWORD)) return json({ error: "password salah" }, 401);
+        // bandingkan HMAC (panjang sama) agar panjang password tidak bocor lewat timing
+        const ok = safeEq(await hmacHex(SECRET, String(b.password || "")), await hmacHex(SECRET, PASSWORD));
+        if (!ok) { await loginFailed(DB, IP, now); return json({ error: "password salah" }, 401); }
+        await DB.prepare("DELETE FROM login_fails WHERE ip=?").bind(IP).run();
         return json({ ok: true }, 200, { "set-cookie": sessionCookie(await makeSession(SECRET)) });
       }
       if (method === "POST" && p === "/api/logout") return json({ ok: true }, 200, { "set-cookie": CLEAR_COOKIE });
@@ -106,6 +142,7 @@ export default {
         return json({ google: GOOGLE_CLIENT_ID, googleReady: !!(GOOGLE_CLIENT_ID && ALLOWED.size) });
       if (method === "POST" && p === "/auth/google") {
         const b = await body();
+        if (!SECRET) return json({ error: "server belum dikonfigurasi (SESSION_SECRET)" }, 503);
         if (!GOOGLE_CLIENT_ID) return json({ error: "Google login belum dikonfigurasi" }, 400);
         if (!ALLOWED.size) return json({ error: "Belum ada email yang diizinkan" }, 403);
         if (!b.credential) return json({ error: "token kosong" }, 400);
@@ -123,6 +160,12 @@ export default {
 
       // ---- rute penerima (tanpa login) ----
       if (method === "GET" && p.startsWith("/t/")) return page(trackHtml);
+      if (method === "GET" && p === "/game") return page(gameHtml);
+      if (method === "GET" && p === "/music.mp3") {
+        return new Response(musicAsset, {
+          headers: { "content-type": "audio/mpeg", "cache-control": "public, max-age=3600" },
+        });
+      }
       const mInfo = p.match(/^\/api\/requests\/([a-f0-9]+)\/info$/);
       if (method === "GET" && mInfo) {
         const r = await DB.prepare(ROW_WITH_LAST("WHERE r.id=?")).bind(mInfo[1]).first();
@@ -139,19 +182,34 @@ export default {
         if (!isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180)
           return json({ error: "koordinat tidak valid" }, 400);
         const acc = isFinite(Number(b.accuracy)) ? Number(b.accuracy) : null;
-        await DB.prepare("INSERT INTO locations(req_id,lat,lng,accuracy,at) VALUES(?,?,?,?,?)").bind(r.id, lat, lng, acc, now).run();
+        // terlalu rapat dengan titik sebelumnya → tidak disimpan (status tetap diperbarui)
+        const tooSoon = r.last_at != null && now - r.last_at < MIN_POINT_GAP_MS && r.mode !== "once";
+        if (!tooSoon) {
+          await DB.prepare("INSERT INTO locations(req_id,lat,lng,accuracy,at) VALUES(?,?,?,?,?)").bind(r.id, lat, lng, acc, now).run();
+          if ((r.points || 0) + 1 > MAX_POINTS)
+            await DB.prepare(
+              "DELETE FROM locations WHERE req_id=? AND id NOT IN (SELECT id FROM locations WHERE req_id=? ORDER BY at DESC LIMIT ?)"
+            ).bind(r.id, r.id, MAX_POINTS).run();
+        }
         if (r.mode === "once") await DB.prepare("UPDATE requests SET completed=1, sharing=0, revoked=0 WHERE id=?").bind(r.id).run();
         else await DB.prepare("UPDATE requests SET sharing=?, revoked=0 WHERE id=?").bind(b.live === true ? 1 : 0, r.id).run();
-        return json({ ok: true });
+        return json({ ok: true, skipped: tooSoon });
       }
+      // penerima menarik izin secara sadar (tombol)
       const mStop = p.match(/^\/api\/requests\/([a-f0-9]+)\/stop$/);
       if (method === "POST" && mStop) {
         await DB.prepare("UPDATE requests SET sharing=0, revoked=1 WHERE id=?").bind(mStop[1]).run();
         return json({ ok: true });
       }
+      // halaman penerima ditutup/ditinggal → live berhenti, TAPI link tidak dicabut
+      const mPause = p.match(/^\/api\/requests\/([a-f0-9]+)\/pause$/);
+      if (method === "POST" && mPause) {
+        await DB.prepare("UPDATE requests SET sharing=0 WHERE id=?").bind(mPause[1]).run();
+        return json({ ok: true });
+      }
 
       // ---- gerbang login ----
-      const authed = await validSession(SECRET, getCookie(request, "lb_session"));
+      const authed = !!SECRET && await validSession(SECRET, getCookie(request, "lb_session"));
       if (!authed) {
         if (p === "/" || p === "/index.html") return page(loginHtml);
         if (p.startsWith("/api/") || p.startsWith("/auth/")) return json({ error: "unauthorized" }, 401);

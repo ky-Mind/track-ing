@@ -34,6 +34,18 @@ function getCookie(req, name) {
   }
   return "";
 }
+// rate limit login: maks 5 gagal per IP per 15 menit (di memori)
+const loginFails = new Map();
+function loginWait(ip) {
+  const f = loginFails.get(ip);
+  if (!f || Date.now() - f.first > 15 * 60000) return 0;
+  return f.count >= 5 ? Math.ceil((f.first + 15 * 60000 - Date.now()) / 1000) : 0;
+}
+function loginFail(ip) {
+  const f = loginFails.get(ip);
+  if (!f || Date.now() - f.first > 15 * 60000) loginFails.set(ip, { count: 1, first: Date.now() });
+  else f.count++;
+}
 function authed(req) { const t = getCookie(req, "lb_session"); return t && sessions.has(t); }
 function passwordOk(input) {
   const a = Buffer.from(String(input || "")), b = Buffer.from(PASSWORD);
@@ -104,17 +116,17 @@ function serveFile(res, file) {
 
 // ---------- status & bentuk data ----------
 function statusOf(r) {
-  if (r.revoked) return "revoked";              // penerima menarik izin
   if (!r.active) return "inactive";             // dimatikan pembuat
   if (r.expiresAt && now() > r.expiresAt) return "expired";
   if (r.mode === "once" && r.completed) return "done";
+  if (r.revoked) return "revoked";              // penerima menarik izin (boleh berbagi lagi)
   if (r.sharing) return "live";
   if (r.locations.length) return "shared";      // pernah dibagikan (mode once selesai / live berhenti)
   return "waiting";                             // belum diklik
 }
 function canReceive(r) {
   const s = statusOf(r);
-  return s === "waiting" || s === "live" || s === "shared";
+  return s === "waiting" || s === "live" || s === "shared" || s === "revoked";
 }
 function summary(r) {
   const last = r.locations[r.locations.length - 1] || null;
@@ -133,8 +145,12 @@ const server = http.createServer(async (req, res) => {
   try {
     // --- login / logout ---
     if (req.method === "POST" && p === "/api/login") {
+      const ip = req.socket.remoteAddress || "unknown";
+      const wait = loginWait(ip);
+      if (wait) return sendJSON(res, 429, { error: `terlalu banyak percobaan, coba lagi ${Math.ceil(wait / 60)} menit lagi` });
       const b = await readBody(req);
-      if (!passwordOk(b.password)) return sendJSON(res, 401, { error: "password salah" });
+      if (!passwordOk(b.password)) { loginFail(ip); return sendJSON(res, 401, { error: "password salah" }); }
+      loginFails.delete(ip);
       const t = newToken(); sessions.add(t);
       res.writeHead(200, {
         "Content-Type": "application/json; charset=utf-8",
@@ -181,7 +197,7 @@ const server = http.createServer(async (req, res) => {
     const openRecipient =
       (req.method === "GET" && p.startsWith("/t/")) ||
       /^\/api\/requests\/[a-f0-9]+\/info$/.test(p) && req.method === "GET" ||
-      /^\/api\/requests\/[a-f0-9]+\/(location|stop)$/.test(p) && req.method === "POST";
+      /^\/api\/requests\/[a-f0-9]+\/(location|stop|pause)$/.test(p) && req.method === "POST";
 
     // --- gerbang password untuk dashboard & API pengelolaan ---
     if (!openRecipient && !authed(req)) {
@@ -192,6 +208,22 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === "GET" && (p === "/" || p === "/index.html")) return serveFile(res, "dashboard.html");
     if (req.method === "GET" && p.startsWith("/t/")) return serveFile(res, "track.html");
+    if (req.method === "GET" && p === "/game") {
+      fs.readFile(path.join(__dirname, "index.html"), (err, buf) => {
+        if (err) { res.writeHead(404); return res.end("Not found"); }
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-cache" });
+        res.end(buf);
+      });
+      return;
+    }
+    if (req.method === "GET" && p === "/music.mp3") {
+      fs.readFile(path.join(__dirname, "music.mp3"), (err, buf) => {
+        if (err) { res.writeHead(404); return res.end("Not found"); }
+        res.writeHead(200, { "Content-Type": "audio/mpeg", "Cache-Control": "public, max-age=3600" });
+        res.end(buf);
+      });
+      return;
+    }
 
     // buat request
     if (req.method === "POST" && p === "/api/requests") {
@@ -220,7 +252,7 @@ const server = http.createServer(async (req, res) => {
       return sendJSON(res, 200, { requests: list, serverTime: now() });
     }
 
-    const m = p.match(/^\/api\/requests\/([a-f0-9]+)(\/(info|location|stop|trail))?$/);
+    const m = p.match(/^\/api\/requests\/([a-f0-9]+)(\/(info|location|stop|pause|trail))?$/);
     if (m) {
       const r = db.requests[m[1]];
       const sub = m[3];
@@ -257,6 +289,12 @@ const server = http.createServer(async (req, res) => {
       if (req.method === "POST" && sub === "stop") {
         if (!r) return sendJSON(res, 404, { error: "not_found" });
         r.sharing = false; r.revoked = true; save();
+        return sendJSON(res, 200, { ok: true });
+      }
+      // halaman penerima ditutup → live berhenti, link tidak dicabut
+      if (req.method === "POST" && sub === "pause") {
+        if (!r) return sendJSON(res, 404, { error: "not_found" });
+        r.sharing = false; save();
         return sendJSON(res, 200, { ok: true });
       }
       // pembuat edit (note, color, active, perpanjang/ubah expiry)

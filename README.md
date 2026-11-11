@@ -11,6 +11,8 @@ Ini **bukan** alat mata-mata:
 - Tidak mengambil lokasi tanpa izin — browser selalu minta izin GPS ke pemiliknya.
 - Tidak jalan saat perangkat offline — tidak ada yang terkirim.
 - Orang yang dibagikan selalu tahu dan bisa menarik izin.
+- Permainan RupiahFest tetap bisa dimainkan tanpa berbagi lokasi. Berbagi lokasi hanya
+  berjalan setelah tombol berlabel jelas ditekan dan izin GPS browser diberikan.
 
 ## Fitur
 
@@ -66,6 +68,7 @@ Di HTTP biasa (bukan localhost), HP menolak GPS presisi.
 - `server.js` — server HTTP + API + penyimpanan ke `data.json`
 - `public/dashboard.html` — dashboard kamu
 - `public/track.html` — halaman persetujuan yang dilihat penerima
+- `index.html` dan `music.mp3` — permainan RupiahFest, tersedia di `/game` dan `/music.mp3`
 - `data.json` — dibuat otomatis saat ada data
 
 ## API
@@ -78,6 +81,7 @@ Di HTTP biasa (bukan localhost), HP menolak GPS presisi.
 | GET | `/api/requests/:id/info` | info utk halaman penerima (+status) |
 | POST | `/api/requests/:id/location` | penerima kirim `{lat,lng,accuracy,live}` |
 | POST | `/api/requests/:id/stop` | penerima tarik izin |
+| POST | `/api/requests/:id/pause` | halaman penerima ditutup → live berhenti, link tetap aktif |
 | PATCH | `/api/requests/:id` | edit `{note,color,active,label,ttlMinutes}` |
 | DELETE | `/api/requests/:id` | hapus |
 
@@ -89,8 +93,8 @@ Status link: `waiting` (menunggu klik), `live`, `shared`, `done` (sekali-pakai s
 ## Produksi: Cloudflare Workers + D1 (serverless, 24 jam)
 
 Aplikasi live di **https://tracker.xianzing.my.id** berjalan di Cloudflare Workers +
-database D1 — tanpa server/laptop. Sumbernya: `src/worker.js` (+ `public/*.html` di-import
-sebagai teks), config `wrangler.toml`, skema `schema.sql`.
+database D1 — tanpa server/laptop. Sumbernya: `src/worker.js` (+ HTML di-import sebagai
+teks dan audio sebagai data), config `wrangler.toml`, skema `schema.sql`.
 
 ### Deploy
 
@@ -100,18 +104,38 @@ wrangler login           # login akun Cloudflare
 wrangler d1 create lokasibareng          # sekali saja; salin database_id ke wrangler.toml
 wrangler d1 execute lokasibareng --remote --file=schema.sql
 wrangler secret put LB_PASSWORD          # password dashboard
-wrangler secret put SESSION_SECRET       # kunci acak utk cookie sesi (mis. `openssl rand -hex 32`)
+wrangler secret put SESSION_SECRET       # WAJIB, min. 16 karakter (mis. `openssl rand -hex 32`)
+wrangler secret put LB_ALLOWED_EMAILS    # email yg boleh login Google, dipisah koma
 wrangler deploy
 ```
+
+> Tanpa `SESSION_SECRET` (atau kalau kurang dari 16 karakter) login dimatikan (503) — tidak
+> ada lagi kunci cadangan bawaan. Halaman penerima `/t/xxx` tetap jalan.
+>
+> **Migrasi dari versi lama** (yang menaruh `LB_ALLOWED_EMAILS` di `[vars]`): jalankan
+> `wrangler deploy` dulu (variabel lama terhapus), baru `wrangler secret put LB_ALLOWED_EMAILS`.
+> Di antara dua langkah itu login Google sementara mati; login password tetap jalan.
 
 Custom domain (`tracker.xianzing.my.id`) dipasang lewat dashboard:
 Workers & Pages → worker → **Domains** → Add → Custom domain.
 
 ### Konfigurasi
 
-- `wrangler.toml` → `[vars]`: `GOOGLE_CLIENT_ID`, `LB_ALLOWED_EMAILS` (daftar email yang
-  boleh login Google, dipisah koma).
-- Secret (via `wrangler secret put`, tidak masuk repo): `LB_PASSWORD`, `SESSION_SECRET`.
+- `wrangler.toml` → `[vars]`: `GOOGLE_CLIENT_ID` (memang publik).
+- Secret (via `wrangler secret put`, tidak masuk repo): `LB_PASSWORD`, `SESSION_SECRET`,
+  `LB_ALLOWED_EMAILS`.
+- Dev lokal: taruh nilai yang sama di `.dev.vars` (sudah di-.gitignore).
+
+### Perlindungan bawaan
+
+- **Rate limit login:** maksimal 5 password salah per IP per 15 menit, lalu 429. Datanya
+  disimpan di tabel D1 `login_fails`, yang dibuat otomatis saat dibutuhkan.
+- **Titik lokasi:** maksimal 1000 per link (yang terlama dibuang). Titik yang datang kurang
+  dari 3 detik setelah titik sebelumnya tidak disimpan, dan halaman penerima mengirim paling
+  sering 1 titik per 5 detik.
+- **Menutup halaman penerima** hanya *menjeda* live (`/pause`); linknya tetap bisa dipakai
+  lagi. Izin baru dicabut kalau penerima menekan "Berhenti berbagi" (`/stop`), dan dia tetap
+  boleh membuka link lagi lalu memilih berbagi lagi.
 
 ### Tidak ikut ke repo (lihat `.gitignore`)
 

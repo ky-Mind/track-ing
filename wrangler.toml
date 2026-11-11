@@ -11,8 +11,13 @@ database_id = "2f48155c-963b-4107-a4f9-907983cd7038"
 
 [vars]
 GOOGLE_CLIENT_ID = "1001949062745-8dbl100g4s2bu3ebvcsbpocpopkfpq79.apps.googleusercontent.com"
-LB_ALLOWED_EMAILS = "hilmykia@gmail.com"
+# LB_ALLOWED_EMAILS sengaja TIDAK di sini (repo publik) — set lewat:
+#   wrangler secret put LB_ALLOWED_EMAILS
 
 [[rules]]
 type = "Text"
 globs = ["**/*.html"]
+
+[[rules]]
+type = "Data"
+globs = ["**/*.mp3"]

