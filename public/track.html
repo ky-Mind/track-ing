@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bagikan Lokasi</title>
+<style>
+  :root{
+    --bg:#0e121d; --card:#161d2e; --fg:#eef1f8; --muted:#97a2bd;
+    --accent:#5a8bff; --accent-weak:#1b2748; --ok:#22c48d; --danger:#ff5f78; --line:#28314c;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:
+      radial-gradient(900px 500px at 50% -10%, rgba(90,139,255,.18), transparent 60%),
+      var(--bg);
+    color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    display:flex;align-items:center;justify-content:center;
+    padding:max(18px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(22px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:4px;max-width:430px;width:100%;
+    padding:28px 24px;box-shadow:0 30px 70px rgba(0,0,0,.5)}
+  .ava{width:60px;height:60px;border-radius:4px;background:var(--accent);display:grid;place-items:center;
+    font-size:26px;font-weight:800;color:#fff;margin:0 auto 16px}
+  .badge{display:flex;justify-content:center;gap:7px;align-items:center;font-size:11.5px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+  h1{font-size:22px;margin:0 0 6px;text-align:center;line-height:1.3}
+  .who{color:var(--accent);font-weight:800}
+  .reason{color:var(--muted);text-align:center;margin:0 0 4px}
+  .mode{display:flex;justify-content:center;margin:12px 0 2px}
+  .modepill{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:5px 11px;border-radius:3px}
+  .note{background:var(--accent-weak);border:1px solid var(--line);border-radius:4px;padding:14px;
+    font-size:13.5px;color:var(--muted);margin:18px 0}
+  .note b{color:var(--fg)}
+  label.live{display:flex;align-items:center;gap:11px;justify-content:center;color:var(--muted);
+    font-size:14px;margin:4px 0 14px;cursor:pointer}
+  label.live input{width:19px;height:19px;accent-color:var(--accent)}
+  button{width:100%;border-radius:4px;padding:16px;font-size:16px;font-weight:700;border:0;cursor:pointer;font-family:inherit}
+  .primary{background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;gap:9px}
+  .primary:active{transform:translateY(1px)}
+  .primary:disabled{opacity:.6}
+  .ghost{background:transparent;color:var(--muted);border:1px solid var(--line);margin-top:10px}
+  .danger{background:transparent;color:var(--danger);border:1px solid var(--line);margin-top:10px}
+  .status{margin-top:16px;text-align:center;font-size:14px;min-height:20px}
+  .ok{color:var(--ok)} .err{color:var(--danger)}
+  .coords{font-size:12.5px;color:var(--muted);text-align:center;margin-top:8px;font-variant-numeric:tabular-nums}
+  .icon{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  [hidden]{display:none!important}
+  .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:s .8s linear infinite;vertical-align:-2px}
+  @keyframes s{to{transform:rotate(360deg)}}
+  .big{font-size:40px;text-align:center;margin:0 0 6px}
+  .pulse{animation:p 1.6s infinite}@keyframes p{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body>
+  <div class="card">
+    <!-- PERSETUJUAN -->
+    <div id="consent" hidden>
+      <div class="ava" id="ava">?</div>
+      <div class="badge"><span class="dot"></span> Permintaan berbagi lokasi</div>
+      <h1><span class="who" id="who">Seseorang</span> meminta lokasimu</h1>
+      <p class="reason" id="reason"></p>
+      <div class="mode"><span class="modepill" id="modepill"></span></div>
+
+      <div class="note">
+        Saat kamu tekan tombol di bawah, browser akan <b>minta izin GPS</b>.
+        Lokasimu dikirim ke orang yang membuat link ini — <b>kamu yang memilih</b>,
+        dan bisa berhenti kapan saja.
+      </div>
+
+      <label class="live" id="liveWrap">
+        <input type="checkbox" id="live"> Perbarui lokasi real-time selama halaman terbuka
+      </label>
+
+      <button class="primary" id="shareBtn">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M12 21s-7-5.2-7-11a7 7 0 1 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+        Bagikan lokasi saya</button>
+      <button class="ghost" id="declineBtn">Tidak, jangan bagikan</button>
+      <div class="status" id="status"></div>
+      <div class="coords" id="coords"></div>
+    </div>
+
+    <!-- BERHASIL -->
+    <div id="done" hidden>
+      <div class="big">✅</div>
+      <h1>Lokasi terkirim</h1>
+      <p class="reason" id="doneMsg"></p>
+      <div class="coords" id="doneCoords"></div>
+      <div class="status" id="liveState"></div>
+      <button class="danger" id="revokeBtn">Berhenti berbagi &amp; tarik izin</button>
+    </div>
+
+    <!-- DITOLAK -->
+    <div id="declined" hidden>
+      <div class="big">🚫</div>
+      <h1>Oke, tidak dibagikan</h1>
+      <p class="reason">Kamu memilih untuk tidak berbagi lokasi. Tidak ada data yang dikirim.</p>
+    </div>
+
+    <!-- TUTUP / KEDALUWARSA -->
+    <div id="closed" hidden>
+      <div class="big" id="closedIcon">⌛</div>
+      <h1 id="closedTitle">Link tidak aktif</h1>
+      <p class="reason" id="closedMsg"></p>
+    </div>
+  </div>
+
+<script>
+const rid = location.pathname.split("/").filter(Boolean).pop();
+const $ = (s)=>document.getElementById(s);
+let watchId=null, mode="live";
+const show=(id)=>["consent","done","declined","closed"].forEach(x=>$(x).hidden=(x!==id));
+
+function post(path,body){ return fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})}); }
+
+function closedView(status){
+  const map={
+    expired:["⌛","Link kedaluwarsa","Masa berlaku link ini sudah habis. Minta link baru ke orang yang mengirimnya."],
+    inactive:["🔕","Link dimatikan","Pembuat link menonaktifkan permintaan ini."],
+    done:["✅","Sudah selesai","Link ini sekali pakai dan lokasimu sudah dibagikan sebelumnya."],
+    not_found:["❓","Link tidak ditemukan","Link ini salah atau sudah dihapus."],
+  };
+  const[ic,t,m]=map[status]||map.not_found;
+  $("closedIcon").textContent=ic; $("closedTitle").textContent=t; $("closedMsg").textContent=m; show("closed");
+}
+
+fetch(`/api/requests/${rid}/info`).then(r=>r.ok?r.json():r.json().then(j=>Promise.reject(j))).then(info=>{
+  if(["expired","inactive","done"].includes(info.status)) return closedView(info.status);
+  mode = info.mode;
+  $("who").textContent = info.label || "Seseorang";
+  $("ava").textContent = (info.label||"?").trim()[0]?.toUpperCase() || "?";
+  $("reason").textContent = info.reason || "Berbagi lokasi";
+  $("modepill").textContent = mode==="once" ? "Sekali kirim" : "Bisa berbagi real-time";
+  if(mode==="once") $("liveWrap").hidden = true;
+  show("consent");
+}).catch(j=>closedView((j&&j.status)||"not_found"));
+
+function sendPos(pos,live){
+  const{latitude,longitude,accuracy}=pos.coords;
+  return post(`/api/requests/${rid}/location`,{lat:latitude,lng:longitude,accuracy,live}).then(r=>{
+    if(!r.ok) return r.json().then(j=>Promise.reject(j));
+    $("doneCoords").textContent=`${latitude.toFixed(6)}, ${longitude.toFixed(6)} · ±${Math.round(accuracy)} m`;
+  });
+}
+
+$("shareBtn").onclick=()=>{
+  if(!navigator.geolocation){ $("status").innerHTML='<span class="err">Perangkat ini tidak mendukung GPS.</span>'; return; }
+  const live = mode==="live" && $("live").checked;
+  $("status").innerHTML='<span class="spin"></span> Meminta izin lokasi…';
+  $("shareBtn").disabled=true;
+  navigator.geolocation.getCurrentPosition(pos=>{
+    sendPos(pos,live).then(()=>{
+      show("done");
+      $("doneMsg").textContent = live ? "Lokasimu dibagikan dan akan terus diperbarui selama halaman ini terbuka."
+        : "Lokasimu sudah dibagikan.";
+      if(live){
+        $("liveState").innerHTML='<span class="ok pulse">● Berbagi langsung…</span>';
+        watchId=navigator.geolocation.watchPosition(p=>sendPos(p,true).catch(()=>{}),()=>{},
+          {enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+      }
+    }).catch(j=>{
+      if(j&&j.status) return closedView(j.status);
+      $("status").innerHTML='<span class="err">Gagal mengirim. Coba lagi.</span>'; $("shareBtn").disabled=false;
+    });
+  },err=>{
+    $("status").innerHTML=`<span class="err">${err.code===1?"Izin lokasi ditolak. Tidak ada yang dikirim.":"Tidak bisa dapat lokasi. Coba lagi di tempat terbuka."}</span>`;
+    $("shareBtn").disabled=false;
+  },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+};
+
+$("declineBtn").onclick=()=>show("declined");
+$("revokeBtn").onclick=()=>{
+  if(watchId!==null){ navigator.geolocation.clearWatch(watchId); watchId=null; }
+  post(`/api/requests/${rid}/stop`).then(()=>{ $("liveState").innerHTML='<span class="ok">Berhenti berbagi. Izin ditarik.</span>'; $("revokeBtn").disabled=true; });
+};
+window.addEventListener("pagehide",()=>{ if(watchId!==null) navigator.sendBeacon(`/api/requests/${rid}/stop`); });
+</script>
+</body>
+</html>

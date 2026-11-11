@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Masuk — LokasiBareng</title>
+<style>
+  :root{--bg:#0e121d;--card:#161d2e;--fg:#eef1f8;--muted:#97a2bd;--accent:#5a8bff;--line:#28314c;--danger:#ff5f78;color-scheme:dark}
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:radial-gradient(900px 500px at 50% -10%,rgba(90,139,255,.18),transparent 60%),var(--bg);
+    color:var(--fg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    display:flex;align-items:center;justify-content:center;
+    padding:max(18px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(22px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:4px;max-width:380px;width:100%;
+    padding:30px 26px;box-shadow:0 30px 70px rgba(0,0,0,.5)}
+  .pin{width:46px;height:46px;border-radius:4px;background:var(--accent);display:grid;place-items:center;margin:0 auto 16px;color:#fff}
+  .icon{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  h1{font-size:20px;margin:0 0 4px;text-align:center}
+  p.sub{color:var(--muted);text-align:center;margin:0 0 22px;font-size:14px}
+  label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600}
+  input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:4px;color:var(--fg);
+    padding:13px;outline:none;font:inherit}
+  input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(90,139,255,.2)}
+  button.pw{width:100%;background:var(--accent);color:#fff;border:0;border-radius:4px;padding:14px;font-weight:700;
+    font-size:16px;cursor:pointer;margin-top:16px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
+  button.pw:active{transform:translateY(1px)}
+  button.pw:disabled{opacity:.6}
+  .err{color:var(--danger);text-align:center;font-size:13.5px;margin-top:12px;min-height:18px}
+  .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:s .8s linear infinite}
+  @keyframes s{to{transform:rotate(360deg)}}
+  .gwrap{margin-bottom:4px;display:flex;justify-content:center;min-height:1px}
+  .divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;margin:18px 0 6px}
+  .divider::before,.divider::after{content:"";height:1px;background:var(--line);flex:1}
+  #gsection[hidden]{display:none}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="pin"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="1"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+    <h1>LokasiBareng</h1>
+    <p class="sub">Masuk untuk membuka dashboard</p>
+
+    <!-- Google (muncul jika dikonfigurasi) -->
+    <div id="gsection" hidden>
+      <div class="gwrap" id="gbtn"></div>
+      <div class="divider">atau pakai password</div>
+    </div>
+
+    <!-- Password -->
+    <form id="f">
+      <label for="pw">Password</label>
+      <input type="password" id="pw" autocomplete="current-password" placeholder="••••••••">
+      <button class="pw" id="btn" type="submit"><svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Masuk</button>
+    </form>
+    <div class="err" id="err"></div>
+  </div>
+
+<script>
+  const f=document.getElementById("f"),pw=document.getElementById("pw"),err=document.getElementById("err"),btn=document.getElementById("btn");
+
+  // --- password login ---
+  f.addEventListener("submit",e=>{
+    e.preventDefault(); err.textContent=""; btn.disabled=true;
+    btn.innerHTML='<span class="spin"></span> Memeriksa…';
+    fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pw.value})})
+      .then(r=>{ if(r.ok){ location.href="/"; return; } throw 0; })
+      .catch(()=>{ err.textContent="Password salah. Coba lagi."; btn.disabled=false;
+        btn.innerHTML='<svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg> Masuk'; pw.select(); });
+  });
+
+  // --- Google login (jika GOOGLE_CLIENT_ID diset di server) ---
+  function onGoogle(resp){
+    err.textContent="";
+    fetch("/auth/google",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({credential:resp.credential})})
+      .then(r=>{ if(r.ok){ location.href="/"; return; } return r.json().then(j=>{throw j;}); })
+      .catch(j=>{ err.textContent=(j&&j.error)||"Login Google gagal."; });
+  }
+  fetch("/api/config").then(r=>r.json()).then(cfg=>{
+    if(!cfg.google) return; // Google tidak dikonfigurasi → cukup password
+    const s=document.createElement("script"); s.src="https://accounts.google.com/gsi/client"; s.async=true; s.defer=true;
+    s.onload=()=>{
+      try{
+        google.accounts.id.initialize({client_id:cfg.google, callback:onGoogle});
+        google.accounts.id.renderButton(document.getElementById("gbtn"),
+          {theme:"filled_blue", size:"large", shape:"rectangular", text:"signin_with", width:320});
+        document.getElementById("gsection").hidden=false;
+        if(!cfg.googleReady) err.textContent="Catatan: daftar email yang diizinkan (LB_ALLOWED_EMAILS) belum diset.";
+      }catch(e){}
+    };
+    document.head.appendChild(s);
+  }).catch(()=>{});
+</script>
+</body>
+</html>

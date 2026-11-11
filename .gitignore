@@ -1,0 +1,16 @@
+# Rahasia & data lokal — JANGAN di-push
+password.txt
+data.json
+lokasibareng.env
+*.env
+.dev.vars
+
+# dependencies & state build
+node_modules/
+.wrangler/
+.cloudflare/
+*.log
+
+# editor / OS / harness
+.claude/
+.DS_Store
